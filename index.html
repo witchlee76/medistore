@@ -1,72 +1,246 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<title>메디스토어 대시보드</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-body{font-family:'Noto Sans KR',sans-serif;background:#f5f6fa;margin:0;padding:20px}
-.dashboard{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.card{background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.05)}
-.title{font-weight:700;margin-bottom:10px}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>메디스토어 인사이트 대시보드</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Noto Sans KR", sans-serif;
+      background: #f4f7fb;
+      color: #1f2937;
+    }
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 28px 20px 40px;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 34px;
+      line-height: 1.2;
+    }
+    .sub {
+      color: #6b7280;
+      font-size: 14px;
+    }
+    .refresh-btn {
+      border: 0;
+      background: #2563eb;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin: 22px 0;
+    }
+    .stat-card, .card {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+    .stat-card {
+      padding: 18px 20px;
+    }
+    .stat-label {
+      color: #6b7280;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 32px;
+      font-weight: 800;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 18px;
+    }
+    .card {
+      padding: 22px;
+      min-height: 240px;
+    }
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+    }
+    .list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .list li {
+      padding: 12px 0;
+      border-bottom: 1px solid #eef2f7;
+    }
+    .list li:last-child { border-bottom: 0; }
+    .list a {
+      color: #111827;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .list .meta {
+      margin-top: 6px;
+      color: #6b7280;
+      font-size: 13px;
+    }
+    .status {
+      margin-top: 10px;
+      color: #6b7280;
+      font-size: 13px;
+    }
+    .loading {
+      color: #6b7280;
+      padding: 10px 0;
+    }
+    @media (max-width: 1100px) {
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .stats { grid-template-columns: 1fr; }
+      .topbar { flex-direction: column; }
+      h1 { font-size: 28px; }
+    }
+  </style>
 </head>
-
 <body>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1>📊 메디스토어 인사이트 대시보드</h1>
+        <div class="sub">감염병 데이터 + 의료 뉴스 자동 반영 버전</div>
+      </div>
+      <button class="refresh-btn" onclick="loadDashboard()">새로고침</button>
+    </div>
 
-<h2>📊 메디스토어 인사이트 대시보드</h2>
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">기준일</div>
+        <div class="stat-value" id="stdDay">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">오늘 신규확진 (전국 합계)</div>
+        <div class="stat-value" id="todayCases">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">누적확진 (전국 합계)</div>
+        <div class="stat-value" id="totalCases">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">뉴스 건수</div>
+        <div class="stat-value" id="newsCount">-</div>
+      </div>
+    </div>
 
-<div class="dashboard">
+    <div class="grid">
+      <div class="card">
+        <h2>🦠 시도별 신규확진 상위 10</h2>
+        <canvas id="infectionChart" height="120"></canvas>
+        <div class="status" id="infectionStatus">불러오는 중...</div>
+      </div>
 
-<div class="card">
-<div class="title">🦠 감염병 트렌드</div>
-<canvas id="infectionChart"></canvas>
-</div>
+      <div class="card">
+        <h2>📰 의료 뉴스</h2>
+        <div id="newsList" class="loading">불러오는 중...</div>
+      </div>
+    </div>
+  </div>
 
-<div class="card">
-<div class="title">💉 인기 상품 TOP</div>
-<ul>
-<li>주사기 3cc</li>
-<li>코로나 키트</li>
-<li>해열제</li>
-<li>혈압계</li>
-</ul>
-</div>
+  <script>
+    let infectionChart;
 
-<div class="card">
-<div class="title">🔥 급상승 키워드</div>
-<ul>
-<li>독감</li>
-<li>백신</li>
-<li>호흡기</li>
-<li>비타민</li>
-</ul>
-</div>
+    function formatNumber(value) {
+      if (value === null || value === undefined || value === '') return '-';
+      return Number(value).toLocaleString('ko-KR');
+    }
 
-<div class="card">
-<div class="title">📰 의료 뉴스</div>
-<ul>
-<li>독감 환자 증가</li>
-<li>백신 공급 부족</li>
-<li>수가 변경 논의</li>
-</ul>
-</div>
+    async function loadInfection() {
+      const res = await fetch('/api/infection');
+      if (!res.ok) throw new Error('감염병 데이터 로드 실패');
+      const data = await res.json();
 
-</div>
+      document.getElementById('stdDay').textContent = data.stdDay || '-';
+      document.getElementById('todayCases').textContent = formatNumber(data.totalIncDec);
+      document.getElementById('totalCases').textContent = formatNumber(data.totalDefCnt);
+      document.getElementById('infectionStatus').textContent =
+        `총 ${data.items.length}개 시도 기준 · 마지막 반영 ${new Date().toLocaleString('ko-KR')}`;
 
-<script>
-new Chart(document.getElementById('infectionChart'), {
-type: 'line',
-data: {
-labels: ['1월','2월','3월','4월'],
-datasets: [{
-label: '감염병 지수',
-data: [20, 40, 35, 60]
-}]
-}
-});
-</script>
+      const labels = data.items.map(item => item.gubun);
+      const values = data.items.map(item => item.incDec);
 
+      const ctx = document.getElementById('infectionChart').getContext('2d');
+      if (infectionChart) infectionChart.destroy();
+
+      infectionChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: '전일 대비 확진자 증감',
+            data: values,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    async function loadNews() {
+      const res = await fetch('/api/news');
+      if (!res.ok) throw new Error('뉴스 데이터 로드 실패');
+      const data = await res.json();
+
+      document.getElementById('newsCount').textContent = formatNumber(data.items.length);
+
+      const html = data.items.map(item => `
+        <li>
+          <a href="${item.link}" target="_blank" rel="noopener noreferrer">${item.title}</a>
+          <div class="meta">${item.source} · ${item.pubDate}</div>
+        </li>
+      `).join('');
+
+      document.getElementById('newsList').innerHTML = `<ul class="list">${html}</ul>`;
+    }
+
+    async function loadDashboard() {
+      document.getElementById('infectionStatus').textContent = '불러오는 중...';
+      document.getElementById('newsList').innerHTML = '불러오는 중...';
+
+      try {
+        await Promise.all([loadInfection(), loadNews()]);
+      } catch (error) {
+        console.error(error);
+        document.getElementById('infectionStatus').textContent = '데이터를 불러오지 못했습니다.';
+        document.getElementById('newsList').innerHTML = '뉴스를 불러오지 못했습니다.';
+      }
+    }
+
+    loadDashboard();
+  </script>
 </body>
 </html>
