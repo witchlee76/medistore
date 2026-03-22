@@ -1,1 +1,72 @@
 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>메디스토어 대시보드</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body{font-family:'Noto Sans KR',sans-serif;background:#f5f6fa;margin:0;padding:20px}
+.dashboard{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.05)}
+.title{font-weight:700;margin-bottom:10px}
+</style>
+</head>
+
+<body>
+
+<h2>📊 메디스토어 인사이트 대시보드</h2>
+
+<div class="dashboard">
+
+<div class="card">
+<div class="title">🦠 감염병 트렌드</div>
+<canvas id="infectionChart"></canvas>
+</div>
+
+<div class="card">
+<div class="title">💉 인기 상품 TOP</div>
+<ul>
+<li>주사기 3cc</li>
+<li>코로나 키트</li>
+<li>해열제</li>
+<li>혈압계</li>
+</ul>
+</div>
+
+<div class="card">
+<div class="title">🔥 급상승 키워드</div>
+<ul>
+<li>독감</li>
+<li>백신</li>
+<li>호흡기</li>
+<li>비타민</li>
+</ul>
+</div>
+
+<div class="card">
+<div class="title">📰 의료 뉴스</div>
+<ul>
+<li>독감 환자 증가</li>
+<li>백신 공급 부족</li>
+<li>수가 변경 논의</li>
+</ul>
+</div>
+
+</div>
+
+<script>
+new Chart(document.getElementById('infectionChart'), {
+type: 'line',
+data: {
+labels: ['1월','2월','3월','4월'],
+datasets: [{
+label: '감염병 지수',
+data: [20, 40, 35, 60]
+}]
+}
+});
+</script>
+
+</body>
+</html>
