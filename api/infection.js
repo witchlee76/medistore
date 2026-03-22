@@ -13,7 +13,7 @@ export async function GET() {
   const yyyy = today.getFullYear();
   const mm = String(today.getMonth() + 1).padStart(2, '0');
   const dd = String(today.getDate()).padStart(2, '0');
-  const stdDay = `${yyyy}-${mm}-${dd}`;
+  const stdDay = "2023-08-01";
 
   const url =
     `http://apis.data.go.kr/1352000/ODMS_COVID_04/callCovid04Api` +
