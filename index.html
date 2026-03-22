@@ -7,17 +7,20 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: "Noto Sans KR", sans-serif;
       background: #f4f7fb;
       color: #1f2937;
     }
+
     .wrap {
       max-width: 1400px;
       margin: 0 auto;
       padding: 28px 20px 40px;
     }
+
     .topbar {
       display: flex;
       justify-content: space-between;
@@ -25,15 +28,18 @@
       gap: 16px;
       margin-bottom: 20px;
     }
+
     h1 {
       margin: 0 0 6px;
       font-size: 34px;
       line-height: 1.2;
     }
+
     .sub {
       color: #6b7280;
       font-size: 14px;
     }
+
     .refresh-btn {
       border: 0;
       background: #2563eb;
@@ -44,79 +50,113 @@
       font-size: 14px;
       font-weight: 700;
     }
+
     .stats {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 16px;
       margin: 22px 0;
     }
-    .stat-card, .card {
+
+    .stat-card,
+    .card {
       background: #fff;
       border-radius: 18px;
       box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
     }
+
     .stat-card {
       padding: 18px 20px;
     }
+
     .stat-label {
       color: #6b7280;
       font-size: 14px;
       margin-bottom: 8px;
     }
+
     .stat-value {
       font-size: 32px;
       font-weight: 800;
     }
+
     .grid {
       display: grid;
       grid-template-columns: 1.4fr 1fr;
       gap: 18px;
     }
+
     .card {
       padding: 22px;
       min-height: 240px;
     }
+
     .card h2 {
       margin: 0 0 14px;
       font-size: 22px;
     }
+
     .list {
       list-style: none;
       padding: 0;
       margin: 0;
     }
+
     .list li {
       padding: 12px 0;
       border-bottom: 1px solid #eef2f7;
     }
-    .list li:last-child { border-bottom: 0; }
+
+    .list li:last-child {
+      border-bottom: 0;
+    }
+
     .list a {
       color: #111827;
       text-decoration: none;
       font-weight: 600;
+      line-height: 1.5;
     }
+
     .list .meta {
       margin-top: 6px;
       color: #6b7280;
       font-size: 13px;
     }
+
     .status {
       margin-top: 10px;
       color: #6b7280;
       font-size: 13px;
     }
+
     .loading {
       color: #6b7280;
       padding: 10px 0;
     }
+
     @media (max-width: 1100px) {
-      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .grid { grid-template-columns: 1fr; }
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
     }
+
     @media (max-width: 640px) {
-      .stats { grid-template-columns: 1fr; }
-      .topbar { flex-direction: column; }
-      h1 { font-size: 28px; }
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        flex-direction: column;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
     }
   </style>
 </head>
@@ -164,36 +204,51 @@
   </div>
 
   <script>
-    let infectionChart;
+    let infectionChart = null;
 
     function formatNumber(value) {
-      if (value === null || value === undefined || value === '') return '-';
-      return Number(value).toLocaleString('ko-KR');
+      if (value === null || value === undefined || value === "") return "-";
+      return Number(value).toLocaleString("ko-KR");
     }
 
     async function loadInfection() {
-      const res = await fetch('/api/infection');
-      if (!res.ok) throw new Error('감염병 데이터 로드 실패');
+      const res = await fetch("/api/infection");
+
+      if (!res.ok) {
+        throw new Error("감염병 데이터 로드 실패");
+      }
+
       const data = await res.json();
 
-      document.getElementById('stdDay').textContent = data.stdDay || '-';
-      document.getElementById('todayCases').textContent = formatNumber(data.totalIncDec);
-      document.getElementById('totalCases').textContent = formatNumber(data.totalDefCnt);
-      document.getElementById('infectionStatus').textContent =
-        `총 ${data.items.length}개 시도 기준 · 마지막 반영 ${new Date().toLocaleString('ko-KR')}`;
+      document.getElementById("stdDay").textContent = data.stdDay || "-";
+      document.getElementById("todayCases").textContent = formatNumber(data.totalIncDec);
+      document.getElementById("totalCases").textContent = formatNumber(data.totalDefCnt);
 
-      const labels = data.items.map(item => item.gubun);
-      const values = data.items.map(item => item.incDec);
+      const items = Array.isArray(data.items) ? data.items : [];
 
-      const ctx = document.getElementById('infectionChart').getContext('2d');
-      if (infectionChart) infectionChart.destroy();
+      if (!items.length) {
+        document.getElementById("infectionStatus").textContent = "감염병 데이터가 없습니다.";
+        return;
+      }
+
+      document.getElementById("infectionStatus").textContent =
+        `총 ${items.length}개 시도 기준 · 마지막 반영 ${new Date().toLocaleString("ko-KR")}`;
+
+      const labels = items.map(item => item.gubun);
+      const values = items.map(item => Number(item.incDec || 0));
+
+      const ctx = document.getElementById("infectionChart").getContext("2d");
+
+      if (infectionChart) {
+        infectionChart.destroy();
+      }
 
       infectionChart = new Chart(ctx, {
-        type: 'bar',
+        type: "bar",
         data: {
           labels,
           datasets: [{
-            label: '전일 대비 확진자 증감',
+            label: "전일 대비 확진자 증감",
             data: values,
             borderWidth: 1
           }]
@@ -204,39 +259,61 @@
             legend: { display: false }
           },
           scales: {
-            y: { beginAtZero: true }
+            y: {
+              beginAtZero: true
+            }
           }
         }
       });
     }
 
     async function loadNews() {
-      const res = await fetch('/api/news');
-      if (!res.ok) throw new Error('뉴스 데이터 로드 실패');
+      const res = await fetch("/api/news");
+
+      if (!res.ok) {
+        throw new Error("뉴스 데이터 로드 실패");
+      }
+
       const data = await res.json();
+      const items = Array.isArray(data.items) ? data.items : [];
 
-      document.getElementById('newsCount').textContent = formatNumber(data.items.length);
+      document.getElementById("newsCount").textContent = formatNumber(items.length);
 
-      const html = data.items.map(item => `
+      if (!items.length) {
+        document.getElementById("newsList").innerHTML = "뉴스가 없습니다.";
+        return;
+      }
+
+      const html = items.map(item => `
         <li>
           <a href="${item.link}" target="_blank" rel="noopener noreferrer">${item.title}</a>
           <div class="meta">${item.source} · ${item.pubDate}</div>
         </li>
-      `).join('');
+      `).join("");
 
-      document.getElementById('newsList').innerHTML = `<ul class="list">${html}</ul>`;
+      document.getElementById("newsList").innerHTML = `<ul class="list">${html}</ul>`;
     }
 
     async function loadDashboard() {
-      document.getElementById('infectionStatus').textContent = '불러오는 중...';
-      document.getElementById('newsList').innerHTML = '불러오는 중...';
+      document.getElementById("infectionStatus").textContent = "불러오는 중...";
+      document.getElementById("newsList").innerHTML = "불러오는 중...";
+      document.getElementById("stdDay").textContent = "-";
+      document.getElementById("todayCases").textContent = "-";
+      document.getElementById("totalCases").textContent = "-";
+      document.getElementById("newsCount").textContent = "-";
 
       try {
-        await Promise.all([loadInfection(), loadNews()]);
+        await loadInfection();
       } catch (error) {
-        console.error(error);
-        document.getElementById('infectionStatus').textContent = '데이터를 불러오지 못했습니다.';
-        document.getElementById('newsList').innerHTML = '뉴스를 불러오지 못했습니다.';
+        console.error("감염병 실패:", error);
+        document.getElementById("infectionStatus").textContent = "데이터를 불러오지 못했습니다.";
+      }
+
+      try {
+        await loadNews();
+      } catch (error) {
+        console.error("뉴스 실패:", error);
+        document.getElementById("newsList").innerHTML = "뉴스를 불러오지 못했습니다.";
       }
     }
 
